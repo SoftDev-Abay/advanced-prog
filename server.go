@@ -5,7 +5,46 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	db "renting/database"
 )
+
+func helloHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/hello" {
+		http.Error(w, "404 not found.", http.StatusNotFound)
+		return
+	}
+
+	if r.Method != "GET" {
+		http.Error(w, "Method is not supported.", http.StatusNotFound)
+		return
+	}
+
+	fmt.Fprintf(w, "Hello!")
+}
+
+func formHandler(w http.ResponseWriter, r *http.Request) {
+
+	if r.URL.Path != "/form" {
+		http.Error(w, "404 not found.", http.StatusNotFound)
+		return
+	}
+
+	if r.Method != "POST" {
+		http.Error(w, "Method is not supported.", http.StatusNotFound)
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		fmt.Fprintf(w, "ParseForm() err: %v", err)
+		return
+	}
+	fmt.Fprintf(w, "POST request successful")
+	name := r.FormValue("name")
+	address := r.FormValue("address")
+
+	fmt.Fprintf(w, "Name = %s\n", name)
+	fmt.Fprintf(w, "Address = %s\n", address)
+}
 
 type message struct {
 	Message string `json:"message"`
@@ -52,12 +91,24 @@ func MessageReciever(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
-	fileServer := http.FileServer(http.Dir("./static"))
-	http.Handle("/", fileServer)
+	fileServer := http.FileServer(http.Dir("./static")) // New code
+	http.Handle("/", fileServer)                        // New code
+	http.HandleFunc("/form", formHandler)
 	http.HandleFunc("/message", MessageReciever)
 
 	fmt.Printf("Starting server at port 8080\n")
+	var arr []string
+
+	arr, err := db.GetBuildings()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(arr)
+
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatal(err)
 	}
+
 }
