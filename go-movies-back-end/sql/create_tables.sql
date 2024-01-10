@@ -265,4 +265,3 @@ ALTER TABLE ONLY public.movies_genres
 --
 -- PostgreSQL database dump complete
 --
-
